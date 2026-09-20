@@ -7,8 +7,8 @@ export const config = {
   port: Number(process.env.PORT ?? 5000),
   dbUrl:
     process.env.DB_URL ??
-    "mongodb://127.0.0.1:27017/inventory-management",
-  clientUrl: process.env.CLIENT_URL ?? "http://localhost:3000",
+    "mongodb+srv://inventorydb:inventorydb1010@cluster0.itevbgt.mongodb.net/inventorydb?retryWrites=true&w=majority&appName=Cluster0",
+  clientUrl: process.env.CLIENT_URL ?? "https://inventory-managment-client.vercel.app",
   jwtSecret: process.env.JWT_SECRET ?? "development-only-secret",
   cookieName: "inventory_token",
   cookieSecure:
