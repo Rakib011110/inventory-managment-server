@@ -1,5 +1,22 @@
 import { app } from "./app";
 import { connectDatabase } from "./config/db";
+import { seedAdmin } from "./config/seed";
+import { migrateStockAccounting } from "./modules/items/migrateStockAccounting";
+
+let isInitialized = false;
+
+async function ensureInitialized() {
+  await connectDatabase();
+  if (!isInitialized) {
+    try {
+      await seedAdmin();
+      await migrateStockAccounting();
+      isInitialized = true;
+    } catch (err) {
+      console.error("Initialization error:", err);
+    }
+  }
+}
 
 export default async function handler(req: any, res: any) {
   const origin = req.headers.origin;
@@ -23,7 +40,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    await connectDatabase();
+    await ensureInitialized();
   } catch (error: any) {
     console.error("Database connection error:", error);
     return res.status(500).json({

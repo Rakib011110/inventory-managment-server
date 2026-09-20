@@ -16,6 +16,6 @@ export const config = {
       ? process.env.COOKIE_SECURE === "true"
       : process.env.NODE_ENV === "production",
   adminName: process.env.ADMIN_NAME ?? "System Admin",
-  adminEmail: process.env.ADMIN_EMAIL,
-  adminPassword: process.env.ADMIN_PASSWORD,
+  adminEmail: process.env.ADMIN_EMAIL ?? "admin@example.com",
+  adminPassword: process.env.ADMIN_PASSWORD ?? "admin12345",
 };
