@@ -1,0 +1,24 @@
+/node_modules 
+.env
+.vercel
+.env.development 
+.env.production
+.env.local
+
+# TypeScript
+tsconfig.tsbuildinfo
+
+# Build output
+/dist
+/.next
+/.cache
+
+# Logs
+/logs
+*.log
+
+# Uploads - User generated content
+/uploads
+
+# Other
+validate-config.js   
