@@ -28,16 +28,19 @@ authRoutes.post(
       { expiresIn: "7d" },
     );
 
+    const isProduction = config.cookieSecure;
+
     res.cookie(config.cookieName, token, {
       httpOnly: true,
-      sameSite: "lax",
-      secure: config.cookieSecure,
+      sameSite: isProduction ? "none" : "lax",
+      secure: isProduction,
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
     res.json({
       success: true,
       data: {
+        token,
         _id: user._id,
         name: user.name,
         email: user.email,
@@ -50,10 +53,11 @@ authRoutes.post(
 );
 
 authRoutes.post("/logout", (_req, res) => {
+  const isProduction = config.cookieSecure;
   res.clearCookie(config.cookieName, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: config.cookieSecure,
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction,
     path: "/",
   });
   res.json({ success: true, data: null });

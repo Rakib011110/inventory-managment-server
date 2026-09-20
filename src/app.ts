@@ -6,9 +6,25 @@ import { apiRoutes } from "./routes";
 
 export const app = express();
 
+const allowedOrigins = [
+  config.clientUrl,
+  "http://localhost:3000",
+  "https://inventory-managment-client.vercel.app",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: config.clientUrl,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/$/, "");
+      if (
+        allowedOrigins.some((o) => cleanOrigin === o.replace(/\/$/, "")) ||
+        cleanOrigin.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   }),
 );
