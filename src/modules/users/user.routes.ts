@@ -22,7 +22,47 @@ userRoutes.get(
         }
       : {};
     const users = await User.find(filter).sort({ createdAt: -1 }).lean();
-    res.json({ success: true, data: users });
+
+    const holdingStats = await Holding.aggregate([
+      {
+        $group: {
+          _id: "$user",
+          assignedItemCount: { $sum: 1 },
+          assignedTotalQuantity: { $sum: "$quantity" },
+          locations: { $addToSet: "$location" },
+        },
+      },
+    ]);
+
+    const statsMap = new Map<
+      string,
+      { assignedItemCount: number; assignedTotalQuantity: number; locations: string[] }
+    >(
+      holdingStats.map((stat) => [
+        String(stat._id),
+        {
+          assignedItemCount: Number(stat.assignedItemCount) || 0,
+          assignedTotalQuantity: Number(stat.assignedTotalQuantity) || 0,
+          locations: (stat.locations as string[]).filter(Boolean),
+        },
+      ]),
+    );
+
+    const usersWithStats = users.map((user) => {
+      const stats = statsMap.get(String(user._id)) ?? {
+        assignedItemCount: 0,
+        assignedTotalQuantity: 0,
+        locations: [],
+      };
+      return {
+        ...user,
+        assignedItemCount: stats.assignedItemCount,
+        assignedTotalQuantity: stats.assignedTotalQuantity,
+        locations: stats.locations,
+      };
+    });
+
+    res.json({ success: true, data: usersWithStats });
   }),
 );
 
@@ -44,10 +84,27 @@ userRoutes.get(
     const user = await User.findById(req.params.id).lean();
     if (!user) throw new AppError(404, "User not found");
     const holdings = await Holding.find({ user: user._id })
-      .populate("item", "name unitPrice location")
+      .populate("item", "name unitPrice location description")
       .sort({ updatedAt: -1 })
       .lean();
-    res.json({ success: true, data: { user, holdings } });
+
+    const totalQuantity = holdings.reduce((sum, h) => sum + h.quantity, 0);
+    const locations = Array.from(
+      new Set(holdings.map((h) => h.location).filter(Boolean)),
+    );
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          ...user,
+          assignedItemCount: holdings.length,
+          assignedTotalQuantity: totalQuantity,
+          locations,
+        },
+        holdings,
+      },
+    });
   }),
 );
 
