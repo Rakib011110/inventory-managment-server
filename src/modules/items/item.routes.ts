@@ -60,6 +60,29 @@ itemRoutes.post(
 );
 
 itemRoutes.get(
+  "/report",
+  asyncHandler(async (_req, res) => {
+    const items = await Item.find({ status: "ACTIVE" }).sort({ name: 1 }).lean();
+    const holdings = await Holding.find({ item: { $in: items.map((item) => item._id) } })
+      .populate("user", "name email phone")
+      .sort({ location: 1, quantity: -1 })
+      .lean();
+
+    const holdingsByItem = new Map<string, typeof holdings>();
+    for (const holding of holdings) {
+      const key = holding.item.toString();
+      holdingsByItem.set(key, [...(holdingsByItem.get(key) ?? []), holding]);
+    }
+
+    const data = items.map((item) => ({
+      ...item,
+      holdings: holdingsByItem.get(item._id.toString()) ?? [],
+    }));
+    res.json({ success: true, data });
+  }),
+);
+
+itemRoutes.get(
   "/:id",
   asyncHandler(async (req, res) => {
     const [item, holdings, history] = await Promise.all([
